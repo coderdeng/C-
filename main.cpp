@@ -1,3 +1,45 @@
+#include "asyncClient.h"
+
+extern io_service service;
+
+int main()
+{
+	std::string t;
+	while (std::cin >> t) {
+		try
+		{
+			ip::tcp::endpoint ep(ip::address::from_string("139.129.129.181"), 8000);
+			talk_to_svr::self_ptr client = talk_to_svr::create(ep);
+			service.run();
+			service.reset();
+			if (client->getSignal() == ok_connect) {
+				client->do_login();
+				service.run();
+				service.reset();
+			}
+			if (client->getSignal() == ok_login) {
+				client->do_ask_clients();
+				service.run();
+				service.reset();
+			}
+			if (client->getSignal() != ok_exit) {
+				client->do_exit();
+				service.run();
+				service.reset();
+			}
+		}
+		catch (const std::exception&)
+		{
+			
+		}
+		catch (const boost::system::error_code &err) {
+			std::cout << err.message() << std::endl;
+		}
+
+	}
+	
+}
+
 /*
 #include "syncService.h"
 
@@ -36,7 +78,7 @@ int main()
 	threads.create_thread(handle_clients_thread);
 	threads.join_all();
 }
-*/
+
 #include "syncClient.h"
 
 int main()
@@ -60,3 +102,4 @@ int main()
 	system("pause");
 	return 0;
 }
+*/
