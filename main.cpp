@@ -1,43 +1,22 @@
-#include "asyncClient.h"
+#include "asyncService.h"
 
 extern io_service service;
+extern client_map clients;
+
+ip::tcp::acceptor acceptor(service, ip::tcp::endpoint(ip::tcp::v4(), 8000));
+
+void handle_accept(client_ptr client, const serror_code &err)
+{
+	client->start();
+	client_ptr new_ = talk_to_client::create();
+	acceptor.async_accept(new_->sock(), boost::bind(handle_accept, new_, _1));
+}
 
 int main()
 {
-	std::string t;
-	while (std::cin >> t) {
-		try
-		{
-			ip::tcp::endpoint ep(ip::address::from_string("139.129.129.181"), 8000);
-			talk_to_svr::self_ptr client = talk_to_svr::create(ep);
-			service.run();
-			service.reset();
-			if (client->getSignal() == ok_connect) {
-				client->do_login();
-				service.run();
-				service.reset();
-			}
-			if (client->getSignal() == ok_login) {
-				client->do_ask_clients();
-				service.run();
-				service.reset();
-			}
-			if (client->getSignal() != ok_exit) {
-				client->do_exit();
-				service.run();
-				service.reset();
-			}
-		}
-		catch (const std::exception&)
-		{
-			
-		}
-		catch (const boost::system::error_code &err) {
-			std::cout << err.message() << std::endl;
-		}
-
-	}
-	
+	client_ptr client = talk_to_client::create();
+	acceptor.async_accept(client->sock(), boost::bind(handle_accept, client, _1));
+	service.run();
 }
 
 /*
