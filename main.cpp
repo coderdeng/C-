@@ -14,9 +14,13 @@ void handle_accept(client_ptr client, const serror_code &err)
 
 int main()
 {
+#define TEST
+#ifndef TEST
 	client_ptr client = talk_to_client::create();
 	acceptor.async_accept(client->sock(), boost::bind(handle_accept, client, _1));
 	service.run();
+#endif // !TEST
+	
 }
 
 /*
